@@ -14,4 +14,10 @@ class Namings {
 	
 	public static val INACTIVE_ENUM_LITERAL = "__Inactive__"
 	
+	public static val IDLE_NODE_STATE_ENUM_LITERAL = "__Idle__"
+	public static val RUNNING_NODE_STATE_ENUM_LITERAL = "__Running__"
+	
+	public static val EMPTY_FLOW_STATE_ENUM_LITERAL = "__Idle__"
+	public static val FULL_FLOW_STATE_ENUM_LITERAL = "__Running__"
+	
 }

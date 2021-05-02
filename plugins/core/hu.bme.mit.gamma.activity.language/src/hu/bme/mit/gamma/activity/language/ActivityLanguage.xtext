@@ -1,0 +1,193 @@
+grammar hu.bme.mit.gamma.activity.language.ActivityLanguage with hu.bme.mit.gamma.action.language.ActionLanguage
+
+import "http://www.eclipse.org/emf/2002/Ecore" as Ecore
+import "http://www.mit.bme.hu/gamma/expression/Model" as ConstraintModel 
+import "http://www.mit.bme.hu/gamma/action/Model" as ActionModel 
+import "http://www.mit.bme.hu/gamma/activity/Model"
+
+NamedActivityDeclaration returns NamedActivityDeclaration:
+	'activity'
+	name=ID
+	(
+		'('
+			( (pins += Pin) (',' pins += Pin)* )?
+		')'
+	)?
+	definition = Definition
+;
+
+
+
+Definition returns Definition:
+	ActivityDefinition |
+	ActionDefinition
+;
+
+ActivityDefinition returns ActivityDefinition:
+	{ActivityDefinition} 
+	('[' 'language' '=' 'activity' ']')?
+	(
+		'{'
+			(variableDeclarations+=VariableDeclaration)*
+			(activityNodes+=ActivityNode)*
+			(flows+=Flow)*
+		'}'
+	)?
+;
+
+ActionDefinition returns ActionDefinition:
+	'[' 'language' '=' 'action' ']'
+	action = Block
+;
+
+
+
+Flow returns Flow:
+	ControlFlow |
+	DataFlow
+;
+
+ControlFlow returns ControlFlow:
+	'control' 'flow'
+	'from' sourceNode=[ActivityNode] 
+	'to' targetNode=[ActivityNode]
+	('[' guard=Expression ']')?
+;
+
+DataFlow returns DataFlow:
+	'data' 'flow'
+	'from' dataSourceReference=DataSourceReference 
+	'to' dataTargetReference=DataTargetReference
+	('[' guard=Expression ']')?
+;
+
+
+
+ActivityNode returns ActivityNode:
+	ActionNode |
+	PseudoActivityNode	
+;
+
+ActionNode returns ActionNode:
+	'action' name=ID
+	(
+		( ':' activityDeclarationReference=ActivityDeclarationReference )
+	)?
+;
+
+ActivityDeclarationReference returns ActivityDeclarationReference:
+	NamedActivityDeclarationReference |
+	InlineActivityDeclaration
+;
+
+NamedActivityDeclarationReference returns NamedActivityDeclarationReference:
+	namedActivityDeclaration=[NamedActivityDeclaration]
+;
+
+InlineActivityDeclaration returns InlineActivityDeclaration:
+	'activity'
+ 	(
+		'('
+			( (pins += Pin) (',' pins += Pin)* )?
+		')'
+	)?
+	definition = Definition
+;
+
+
+PseudoActivityNode returns PseudoActivityNode:
+	InitialNode |
+	FinalNode |
+	DataNode
+;
+
+InitialNode returns InitialNode:
+	'initial' name=ID
+;
+
+FinalNode returns FinalNode:
+	'final' name=ID
+;
+
+DataNode returns DataNode:
+	ForkNode |
+	JoinNode |
+	DecisionNode |
+	MergeNode
+;
+
+ForkNode returns ForkNode:
+	'fork' name=ID
+;
+
+JoinNode returns JoinNode:
+	'join' name=ID
+;
+
+DecisionNode returns DecisionNode:
+	'decision' name=ID
+;
+
+MergeNode returns MergeNode:
+	'merge' name=ID
+;
+
+
+
+Pin returns Pin:
+	InputPin |
+	OutputPin
+;
+
+InputPin returns InputPin:
+	'in' name=ID ':' type=Type
+;
+
+OutputPin returns OutputPin:
+	'out' name=ID ':' type=Type
+;
+
+
+DataSourceReference returns DataSourceReference:
+	DataNodeReference |
+	InsideInputPinReference |
+	OutsideOutputPinReference
+;
+
+DataTargetReference returns DataTargetReference:
+	DataNodeReference |
+	OutsideInputPinReference |
+	InsideOutputPinReference	
+;
+
+DataNodeReference returns DataNodeReference:
+	dataNode=[DataNode]
+;
+
+InsideInputPinReference returns InsideInputPinReference:
+	'self' '.' inputPin=[InputPin]
+;
+
+OutsideInputPinReference returns OutsideInputPinReference:
+	actionNode=[ActionNode] '.' inputPin=[InputPin]
+;
+
+InsideOutputPinReference returns InsideOutputPinReference:
+	'self' '.' outputPin=[OutputPin]
+;
+
+OutsideOutputPinReference returns OutsideOutputPinReference:
+	actionNode=[ActionNode] '.' outputPin=[OutputPin]
+;
+
+@Override
+AssignableAccessExpression returns ConstraintModel::ReferenceExpression:
+	super |
+	InsideOutputPinReference
+;
+
+@Override
+PrimaryExpression returns ConstraintModel::Expression:
+	super | 
+	InsideInputPinReference
+;

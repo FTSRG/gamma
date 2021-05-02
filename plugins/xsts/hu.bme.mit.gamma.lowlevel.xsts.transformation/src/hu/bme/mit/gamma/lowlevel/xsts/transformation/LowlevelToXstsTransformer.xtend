@@ -182,7 +182,7 @@ class LowlevelToXstsTransformer {
 		while (!allRegionsTransformed) {
 			// Transforming subregions one by one in accordance with containment hierarchy
 			getSubregionsRule.fireAllCurrent[!trace.isTraced(it.region) && trace.isTraced(it.parentRegion)]
-		}
+		}		
 		getComponentParametersRule.fireAllCurrent
 		getPlainVariablesRule.fireAllCurrent
 		// Now component parameters come as plain variables (from constants), so TimeoutsRule must follow PlainVariablesRule
